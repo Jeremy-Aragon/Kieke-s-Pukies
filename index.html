@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -303,16 +304,7 @@
     <p>Track orders and save your standing order.</p>
   </div>
   <div class="wrap section-tight">
-    <div class="auth-box">
-      <form id="loginForm">
-        <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" required placeholder="you@email.com"></div>
-        <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" required placeholder="••••••••"></div>
-        <button type="submit" class="btn btn-primary btn-full">Log in</button>
-      </form>
-      <div style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--ink-soft);">
-        No account yet? <a href="#" style="color:var(--moss);font-weight:600;" id="guestContinue">Continue as guest</a>
-      </div>
-    </div>
+    <div class="auth-box" id="authBox"></div>
   </div>
 </section>
 
@@ -436,6 +428,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="supabase-client.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
