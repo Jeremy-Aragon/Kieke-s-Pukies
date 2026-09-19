@@ -25,7 +25,7 @@ const products = [
 ];
 
 let cart = []; // {id, qty}
-let loggedInUser = null;
+let currentUser = null; // {id, email, name, avatar} from Supabase, or null when signed out
 let lastOrder = null;
 let currentModalProduct = null;
 let modalQty = 1;
@@ -228,20 +228,87 @@ function renderConfirmation(){
   `;
 }
 
-/* ---------------- LOGIN / CONTACT forms ---------------- */
-document.getElementById('loginForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const email = document.getElementById('lEmail').value;
-  loggedInUser = email.split('@')[0];
-  document.getElementById('loginNavLabel').textContent = loggedInUser;
-  showToast(`Welcome back, ${loggedInUser}`);
+/* ---------------- AUTH (Supabase + Google) ---------------- */
+function mapSupabaseUser(u){
+  if(!u) return null;
+  const meta = u.user_metadata || {};
+  return {
+    id: u.id,
+    email: u.email,
+    name: meta.full_name || meta.name || null,
+    avatar: meta.avatar_url || meta.picture || null
+  };
+}
+
+function updateLoginNav(){
+  const label = document.getElementById('loginNavLabel');
+  label.textContent = currentUser ? (currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email.split('@')[0]) : "Log In";
+}
+
+function renderAuthBox(){
+  const box = document.getElementById('authBox');
+  if(!box) return;
+
+  if(currentUser){
+    const initial = (currentUser.name || currentUser.email || "?").trim()[0].toUpperCase();
+    box.innerHTML = `
+      <div class="account-card">
+        ${currentUser.avatar
+          ? `<img class="account-avatar" src="${currentUser.avatar}" alt="${currentUser.name || currentUser.email}">`
+          : `<div class="account-avatar-fallback">${initial}</div>`}
+        <div class="account-name">${currentUser.name || currentUser.email}</div>
+        <div class="account-email">${currentUser.email}</div>
+        <button type="button" class="btn btn-outline btn-full" id="signOutBtn" style="margin-top:24px;">Sign out</button>
+      </div>
+    `;
+    document.getElementById('signOutBtn').addEventListener('click', signOutUser);
+  } else {
+    box.innerHTML = `
+      <button type="button" class="btn btn-google btn-full" id="googleSignInBtn">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .9 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--ink-soft);">
+        <a href="#" style="color:var(--moss);font-weight:600;" id="guestContinue">Continue as guest</a>
+      </div>
+    `;
+    document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+    document.getElementById('guestContinue').addEventListener('click', e=>{
+      e.preventDefault();
+      goTo('home');
+      showToast("Continuing as guest");
+    });
+  }
+}
+
+async function signInWithGoogle(){
+  const btn = document.getElementById('googleSignInBtn');
+  if(btn) btn.setAttribute('disabled','true');
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error){
+    showToast("Google sign-in failed — try again");
+    if(btn) btn.removeAttribute('disabled');
+  }
+  // On success, Supabase redirects to Google and back — the auth listener below
+  // picks up the session once the user lands back on the site.
+}
+
+async function signOutUser(){
+  await supabaseClient.auth.signOut();
+  showToast("Signed out");
   goTo('home');
+}
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  currentUser = mapSupabaseUser(session?.user);
+  updateLoginNav();
+  if(location.hash.slice(1) === 'login') renderAuthBox();
 });
-document.getElementById('guestContinue').addEventListener('click', e=>{
-  e.preventDefault();
-  goTo('home');
-  showToast("Continuing as guest");
-});
+
+/* ---------------- CONTACT form ---------------- */
 document.getElementById('contactForm').addEventListener('submit', e=>{
   e.preventDefault();
   showToast("Message sent — we'll reply within a day");
@@ -285,6 +352,7 @@ function renderPage(page){
   if(page === 'cart'){ renderCartPage(); }
   if(page === 'checkout'){ renderCheckoutSummary(); }
   if(page === 'confirmation'){ renderConfirmation(); }
+  if(page === 'login'){ renderAuthBox(); }
 }
 
 /* goTo updates the URL hash (so browser back/forward and bookmarks work);
