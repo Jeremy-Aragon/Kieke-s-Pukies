@@ -144,6 +144,16 @@
   .btn-clay:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 14px 28px rgba(255,90,54,.34);}
   .btn-full{width:100%;}
   .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+  .btn-google{background:#fff;color:var(--soil);border:1.5px solid var(--line);}
+  .btn-google:hover{border-color:var(--soil);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .btn-google svg{flex-shrink:0;}
+
+  /* ---------- ACCOUNT / AUTH ---------- */
+  .account-card{text-align:center;}
+  .account-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:1.5px solid var(--line);}
+  .account-avatar-fallback{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:var(--moss);color:#fff;font-family:'Fraunces',serif;font-size:26px;font-weight:600;}
+  .account-name{font-size:18px;font-weight:600;}
+  .account-email{font-size:13.5px;color:var(--ink-soft);margin-top:2px;}
 
   /* ---------- SECTIONS / PAGES ---------- */
   main{min-height:60vh;}
