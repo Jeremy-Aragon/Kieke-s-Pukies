@@ -144,9 +144,6 @@
   .btn-clay:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 14px 28px rgba(255,90,54,.34);}
   .btn-full{width:100%;}
   .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
-  .btn-google{background:#fff;color:var(--soil);border:1.5px solid var(--line);}
-  .btn-google:hover{border-color:var(--soil);transform:translateY(-2px);box-shadow:var(--shadow-md);}
-  .btn-google svg{flex-shrink:0;}
 
   /* ---------- ACCOUNT / AUTH ---------- */
   .account-card{text-align:center;}
