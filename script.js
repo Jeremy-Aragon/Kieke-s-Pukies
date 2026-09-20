@@ -26,6 +26,7 @@ const products = [
 
 let cart = []; // {id, qty}
 let currentUser = null; // {id, email, name, avatar} from Supabase, or null when signed out
+let pendingRedirect = null; // page to go to once login succeeds (set when a gated page is blocked)
 let lastOrder = null;
 let currentModalProduct = null;
 let modalQty = 1;
@@ -191,19 +192,35 @@ function renderCheckoutSummary(){
   `;
 }
 
-document.getElementById('checkoutForm').addEventListener('submit', e=>{
+document.getElementById('checkoutForm').addEventListener('submit', async e=>{
   e.preventDefault();
   if(cart.length === 0){ showToast("Your cart is empty"); return; }
+  if(!currentUser){ showToast("Please log in to check out"); goTo('login'); return; }
+
   const subtotal = cartTotal();
   const shipping = calcShipping(subtotal);
-  lastOrder = {
-    id: "HK-" + Math.floor(100000 + Math.random()*899999),
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if(submitBtn) submitBtn.setAttribute('disabled','true');
+
+  const { data, error } = await supabaseClient.from('orders').insert({
+    order_number: "HK-" + Math.floor(100000 + Math.random()*899999),
+    user_id: currentUser.id,
     items: cart.map(i=>({...findProduct(i.id), qty:i.qty})),
     subtotal, shipping, total: subtotal+shipping,
-    name: document.getElementById('chName').value,
+    customer_name: document.getElementById('chName').value,
     address: document.getElementById('chAddr').value,
     city: document.getElementById('chCity').value
-  };
+  }).select().single();
+
+  if(submitBtn) submitBtn.removeAttribute('disabled');
+
+  if(error){
+    showToast("Couldn't place order — please try again");
+    console.error(error);
+    return;
+  }
+
+  lastOrder = data;
   cart = [];
   updateCartCount();
   goTo('confirmation');
@@ -219,13 +236,92 @@ function renderConfirmation(){
     `<div class="mini-line"><span>${p.qty} × ${p.name}</span><span>${money(p.price*p.qty)}</span></div>`
   ).join('');
   document.getElementById('orderSummary').innerHTML = `
-    <div class="order-id">${lastOrder.id}</div>
-    <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:16px;">Shipping to ${lastOrder.name}, ${lastOrder.address}, ${lastOrder.city}</p>
+    <div class="order-id">${lastOrder.order_number}</div>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:16px;">Shipping to ${lastOrder.customer_name}, ${lastOrder.address}, ${lastOrder.city}</p>
     ${lines}
     <div class="summary-row"><span>Subtotal</span><span>${money(lastOrder.subtotal)}</span></div>
     <div class="summary-row"><span>Shipping</span><span>${lastOrder.shipping===0?'Free':money(lastOrder.shipping)}</span></div>
     <div class="summary-row total"><span>Total paid</span><span>${money(lastOrder.total)}</span></div>
+    <button type="button" class="btn btn-outline btn-full" style="margin-top:18px;" id="trackOrderBtn">Track this order</button>
   `;
+  document.getElementById('trackOrderBtn').addEventListener('click', ()=> goTo('orders'));
+}
+
+/* ---------------- ORDER TRACKING ---------------- */
+const ORDER_STEPS = [
+  {key:'placed', label:'Order Placed'},
+  {key:'preparing', label:'Preparing'},
+  {key:'out_for_delivery', label:'Out for Delivery'},
+  {key:'delivered', label:'Delivered'}
+];
+
+function orderTimelineHTML(status){
+  const idx = Math.max(0, ORDER_STEPS.findIndex(s=>s.key===status));
+  return `<div class="order-timeline">
+    ${ORDER_STEPS.map((s,i)=>`
+      <div class="timeline-step ${i<idx?'done':''} ${i===idx?'current':''}">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">${s.label}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function orderCardHTML(o){
+  const date = new Date(o.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+  const lines = o.items.map(p=>`<div class="mini-line"><span>${p.qty} × ${p.name}</span><span>${money(p.price*p.qty)}</span></div>`).join('');
+  return `<div class="order-card" style="margin-top:0;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+      <div class="order-id">${o.order_number}</div>
+      <div style="font-size:13px;color:var(--ink-soft);">${date}</div>
+    </div>
+    ${orderTimelineHTML(o.status)}
+    <div style="margin-top:18px;">${lines}</div>
+    <div class="summary-row total"><span>Total</span><span>${money(o.total)}</span></div>
+  </div>`;
+}
+
+async function renderOrdersPage(){
+  const el = document.getElementById('ordersContent');
+  if(!el || !currentUser) return;
+  el.innerHTML = `<p style="color:var(--ink-soft);">Loading your orders…</p>`;
+
+  const { data, error } = await supabaseClient
+    .from('orders')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending:false });
+
+  if(error){
+    el.innerHTML = `<p style="color:var(--ink-soft);">Couldn't load your orders — try again.</p>`;
+    console.error(error);
+    return;
+  }
+  if(!data || data.length === 0){
+    el.innerHTML = `<div class="empty-state">
+      <h3 style="font-size:20px;margin-bottom:8px;">No orders yet</h3>
+      <p style="color:var(--ink-soft);margin-bottom:24px;">Your placed orders will show up here.</p>
+      <button class="btn btn-primary" data-nav="shop">Browse products</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = data.map(orderCardHTML).join('');
+}
+
+/* Live-updates the orders page if an order's status changes while it's open. */
+let ordersRealtimeChannel = null;
+function subscribeOrdersRealtime(){
+  if(!currentUser) return;
+  if(ordersRealtimeChannel){ supabaseClient.removeChannel(ordersRealtimeChannel); }
+  ordersRealtimeChannel = supabaseClient
+    .channel('orders-' + currentUser.id)
+    .on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:`user_id=eq.${currentUser.id}` },
+      ()=>{ if(location.hash.slice(1) === 'orders') renderOrdersPage(); }
+    )
+    .subscribe();
+}
+function unsubscribeOrdersRealtime(){
+  if(ordersRealtimeChannel){ supabaseClient.removeChannel(ordersRealtimeChannel); ordersRealtimeChannel = null; }
 }
 
 /* ---------------- AUTH (Supabase + Google) ---------------- */
@@ -258,9 +354,11 @@ function renderAuthBox(){
           : `<div class="account-avatar-fallback">${initial}</div>`}
         <div class="account-name">${currentUser.name || currentUser.email}</div>
         <div class="account-email">${currentUser.email}</div>
-        <button type="button" class="btn btn-outline btn-full" id="signOutBtn" style="margin-top:24px;">Sign out</button>
+        <button type="button" class="btn btn-primary btn-full" id="myOrdersBtn" style="margin-top:24px;">My Orders</button>
+        <button type="button" class="btn btn-outline btn-full" id="signOutBtn" style="margin-top:10px;">Sign out</button>
       </div>
     `;
+    document.getElementById('myOrdersBtn').addEventListener('click', ()=> goTo('orders'));
     document.getElementById('signOutBtn').addEventListener('click', signOutUser);
   } else {
     box.innerHTML = `
@@ -272,6 +370,7 @@ function renderAuthBox(){
     renderGoogleButton();
     document.getElementById('guestContinue').addEventListener('click', e=>{
       e.preventDefault();
+      pendingRedirect = null;
       goTo('home');
       showToast("Continuing as guest");
     });
@@ -326,6 +425,7 @@ async function handleGoogleCredentialResponse(response){
 
 async function signOutUser(){
   await supabaseClient.auth.signOut();
+  unsubscribeOrdersRealtime();
   showToast("Signed out");
   goTo('home');
 }
@@ -333,6 +433,15 @@ async function signOutUser(){
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   currentUser = mapSupabaseUser(session?.user);
   updateLoginNav();
+  if(currentUser){
+    subscribeOrdersRealtime();
+    if(pendingRedirect){
+      const dest = pendingRedirect;
+      pendingRedirect = null;
+      goTo(dest);
+      return;
+    }
+  }
   if(location.hash.slice(1) === 'login') renderAuthBox();
 });
 
@@ -352,14 +461,20 @@ document.addEventListener('click', e=>{
 /* ---------------- ROUTER ---------------- */
 const validPages = Array.from(document.querySelectorAll('section[data-page]')).map(s => s.dataset.page);
 const cartFlowPages = ['cart','checkout','confirmation'];
+const authRequiredPages = ['checkout','orders']; // require sign-in — see pendingRedirect above
 const pageTitles = {
   home:"Home", shop:"Shop", about:"About Us", how:"How It Works",
   sustainability:"Sustainability", contact:"Contact Us", cart:"Your Cart",
-  login:"Log In", checkout:"Checkout", confirmation:"Order Placed"
+  login:"Log In", orders:"My Orders", checkout:"Checkout", confirmation:"Order Placed"
 };
 
 function renderPage(page){
   if(!validPages.includes(page)) page = 'home';
+  if(authRequiredPages.includes(page) && !currentUser){
+    pendingRedirect = page;
+    showToast("Please log in to continue");
+    page = 'login';
+  }
 
   document.querySelectorAll('section[data-page]').forEach(s=>{
     s.classList.toggle('active', s.dataset.page === page);
@@ -381,10 +496,12 @@ function renderPage(page){
   if(page === 'checkout'){ renderCheckoutSummary(); }
   if(page === 'confirmation'){ renderConfirmation(); }
   if(page === 'login'){ renderAuthBox(); }
+  if(page === 'orders'){ renderOrdersPage(); }
 }
 
 /* goTo updates the URL hash (so browser back/forward and bookmarks work);
-   the hashchange listener is what actually renders the page. */
+   the hashchange listener is what actually renders the page (and applies
+   the same login gate, since renderPage checks authRequiredPages too). */
 function goTo(page){
   if(!validPages.includes(page)) page = 'home';
   if(location.hash.slice(1) === page){
@@ -434,4 +551,16 @@ document.addEventListener('keydown', e=>{
 
 /* ---------------- INIT ---------------- */
 renderHomeFeatured();
-renderPage(location.hash.slice(1) || 'home');
+(async () => {
+  const initialPage = location.hash.slice(1) || 'home';
+  if(authRequiredPages.includes(initialPage)){
+    // Wait for Supabase to restore any existing session first, so a signed-in
+    // user reloading straight into #checkout or #orders isn't bounced to
+    // login just because currentUser hasn't been set yet.
+    const { data } = await supabaseClient.auth.getSession();
+    currentUser = mapSupabaseUser(data.session?.user);
+    updateLoginNav();
+    if(currentUser) subscribeOrdersRealtime();
+  }
+  renderPage(initialPage);
+})();
