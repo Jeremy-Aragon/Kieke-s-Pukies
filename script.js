@@ -20,6 +20,17 @@ async function loadProducts(){
 function productArt(p){
   return p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : (icons[p.icon] || '');
 }
+
+/* Wraps productCard so one malformed product record (bad price, missing field, etc.)
+   can't throw and blank out the entire grid — it's skipped and logged instead. */
+function safeProductCard(p){
+  try{
+    return productCard(p);
+  } catch(err){
+    console.error(`Product id=${p && p.id} ("${p && p.name}") failed to render and was skipped:`, err, p);
+    return '';
+  }
+}
 function productArtClass(p){
   return p.image ? 'has-image' : '';
 }
@@ -63,7 +74,7 @@ function productCard(p){
 
 function renderHomeFeatured(){
   document.getElementById('homeFeatured').innerHTML =
-    products.slice(0,4).map(productCard).join('');
+    products.slice(0,4).map(safeProductCard).join('');
 }
 
 function renderFilters(){
@@ -75,7 +86,7 @@ function renderFilters(){
 
 function renderShopGrid(){
   const list = activeFilter === "All" ? products : products.filter(p=>p.cat===activeFilter);
-  document.getElementById('shopGrid').innerHTML = list.map(productCard).join('');
+  document.getElementById('shopGrid').innerHTML = list.map(safeProductCard).join('');
   document.getElementById('resultCount').textContent = `${list.length} product${list.length!==1?'s':''}`;
 }
 
