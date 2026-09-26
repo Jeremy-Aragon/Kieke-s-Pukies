@@ -501,7 +501,7 @@ function renderPage(page){
 
   closeMobileMenu();
   window.scrollTo({top:0, behavior:'instant' in document.documentElement.style ? 'instant' : 'auto'});
-  document.title = pageTitles[page] ? `${pageTitles[page]} — Kieke's Pukies` : "Kieke's Pukies";
+  document.title = pageTitles[page] ? `${pageTitles[page]} | Kieke's Pukies` : "Kieke's Pukies";
 
   if(page === 'shop'){ renderFilters(); renderShopGrid(); }
   if(page === 'cart'){ renderCartPage(); }
