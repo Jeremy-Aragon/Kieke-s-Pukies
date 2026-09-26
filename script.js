@@ -1,28 +1,28 @@
-/* ---------------- ICONS ---------------- */
-const icons = {
-  fish: `<svg viewBox="0 0 100 100" fill="none"><path d="M20 50c14-14 46-14 60 0-14 14-46 14-60 0z" stroke="var(--soil)" stroke-width="2"/><path d="M78 50l14-11v22L78 50z" stroke="var(--soil)" stroke-width="2" stroke-linejoin="round"/><circle cx="34" cy="46" r="2.4" fill="var(--soil)"/><path d="M28 55c6 4 14 5 20 5" stroke="var(--clay)" stroke-width="1.6"/></svg>`,
-  shellfish: `<svg viewBox="0 0 100 100" fill="none"><path d="M24 62c0-20 12-34 26-34s26 14 26 34" stroke="var(--soil)" stroke-width="2"/><path d="M24 62h52M30 62c4-16 4-24 0-34M70 62c-4-16-4-24 0-34" stroke="var(--soil)" stroke-width="1.6"/><path d="M50 28V16M44 20l-4-8M56 20l4-8" stroke="var(--clay)" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-  steak: `<svg viewBox="0 0 100 100" fill="none"><path d="M22 44c6-14 22-20 40-16 16 4 22 16 16 30-6 12-24 18-40 12-14-6-20-16-16-26z" stroke="var(--soil)" stroke-width="2"/><path d="M34 40c8 6 8 18 0 26M50 34c6 8 6 24-2 32M64 34c6 6 8 20 2 30" stroke="var(--clay)" stroke-width="1.3"/></svg>`,
-  mince: `<svg viewBox="0 0 100 100" fill="none"><rect x="20" y="36" width="60" height="36" rx="6" stroke="var(--soil)" stroke-width="2"/><path d="M20 46h60M20 62h60" stroke="var(--line)" stroke-width="1.4"/><circle cx="34" cy="54" r="2.6" fill="var(--clay)"/><circle cx="50" cy="58" r="2.6" fill="var(--clay)"/><circle cx="66" cy="53" r="2.6" fill="var(--clay)"/></svg>`,
-  chicken: `<svg viewBox="0 0 100 100" fill="none"><path d="M32 70c-4-20 6-38 24-38 16 0 26 16 22 34-2 10-12 16-24 16-12 0-20-4-22-12z" stroke="var(--soil)" stroke-width="2"/><path d="M52 32c2-8 10-10 14-6-4 2-8 4-9 8" stroke="var(--clay)" stroke-width="1.8" stroke-linecap="round"/><circle cx="62" cy="36" r="2" fill="var(--soil)"/></svg>`,
-  duck: `<svg viewBox="0 0 100 100" fill="none"><path d="M30 34c14-6 30-4 36 8 6 12 0 26-14 30-12 4-24-2-26-14-2-10 0-20 4-24z" stroke="var(--soil)" stroke-width="2"/><path d="M30 34c12 4 14 16 8 24" stroke="var(--clay)" stroke-width="1.4"/></svg>`,
-  tomato: `<svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="56" r="26" stroke="var(--soil)" stroke-width="2"/><path d="M50 30c-4-8 2-14 10-12-2 6-4 10-10 12z" stroke="var(--clay)" stroke-width="1.8" stroke-linejoin="round"/><path d="M40 28c0-6 6-10 10-8" stroke="var(--clay)" stroke-width="1.6"/></svg>`,
-  greens: `<svg viewBox="0 0 100 100" fill="none"><path d="M50 76c-16-4-24-18-20-34 12 2 20 10 22 22 2-14 12-22 24-24 2 16-8 32-26 36z" stroke="var(--soil)" stroke-width="2"/><path d="M50 76V50" stroke="var(--clay)" stroke-width="1.6"/></svg>`,
-  fruit: `<svg viewBox="0 0 100 100" fill="none"><rect x="18" y="46" width="64" height="30" rx="4" stroke="var(--soil)" stroke-width="2"/><path d="M18 56h64M18 66h64" stroke="var(--line)" stroke-width="1.4"/><circle cx="34" cy="42" r="10" stroke="var(--clay)" stroke-width="1.8"/><circle cx="58" cy="38" r="12" stroke="var(--clay)" stroke-width="1.8"/><path d="M58 26v-6M34 32v-5" stroke="var(--soil)" stroke-width="1.4" stroke-linecap="round"/></svg>`
-};
-
 /* ---------------- DATA ---------------- */
-const products = [
-  {id:1, name:"Wild King Salmon Fillet", cat:"Seafood", price:28, icon:"fish", desc:"Line-caught king salmon, filleted the morning it's sold. Rich, firm and never previously frozen."},
-  {id:2, name:"Jumbo Gulf Shrimp, 1lb", cat:"Seafood", price:19, icon:"shellfish", desc:"Head-on shrimp from a single Gulf boat, sized large for grilling or a proper shrimp cocktail."},
-  {id:3, name:"Dry-Aged Ribeye Steak", cat:"Meat", price:34, icon:"steak", desc:"28-day dry-aged ribeye from grass-fed cattle, cut to your preferred thickness when you order."},
-  {id:4, name:"Grass-Fed Ground Beef, 1lb", cat:"Meat", price:12, icon:"mince", desc:"Coarse-ground from whole cuts, no fillers — from a single regenerative-pasture farm."},
-  {id:5, name:"Free-Range Whole Chicken", cat:"Poultry", price:22, icon:"chicken", desc:"Pasture-raised, air-chilled whole bird from a farm we've bought from for over a decade."},
-  {id:6, name:"Duck Breast, Pair", cat:"Poultry", price:24, icon:"duck", desc:"Two skin-on duck breasts from a small upstate farm, ready to sear."},
-  {id:7, name:"Heirloom Tomatoes, 1lb", cat:"Vegetables", price:6, icon:"tomato", desc:"A mix of heirloom varieties, vine-ripened and picked within two days of delivery."},
-  {id:8, name:"Baby Spinach, Bunch", cat:"Vegetables", price:4, icon:"greens", desc:"Tender young spinach from a regional grower, harvested to order in small batches."},
-  {id:9, name:"Stone Fruit Basket", cat:"Fruit", price:9, icon:"fruit", desc:"A hand-picked mix of peaches, plums and apricots, chosen for ripeness that day."}
-];
+// Products live in Supabase (table: products) so they can be managed from the
+// admin panel. loadProducts() fetches them once at startup; see INIT below.
+let products = [];
+async function loadProducts(){
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('id');
+  if(error){ console.error(error); return; }
+  products = (data || []).map(p => ({
+    id: p.id, name: p.name, cat: p.category,
+    price: Number(p.price), icon: p.icon, desc: p.description,
+    image: p.image_url || null
+  }));
+}
+
+/* Renders a product photo when one's set on the product, falling back to the hand-drawn icon. */
+function productArt(p){
+  return p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : (icons[p.icon] || '');
+}
+function productArtClass(p){
+  return p.image ? 'has-image' : '';
+}
 
 let cart = []; // {id, qty}
 let currentUser = null; // {id, email, name, avatar} from Supabase, or null when signed out
@@ -52,7 +52,7 @@ function showToast(msg){
 /* ---------------- RENDER: product cards ---------------- */
 function productCard(p){
   return `<div class="card" data-open="${p.id}">
-    <div class="card-art">${icons[p.icon]}</div>
+    <div class="card-art ${productArtClass(p)}">${productArt(p)}</div>
     <div class="card-body">
       <div class="card-cat">${p.cat}</div>
       <div class="card-name">${p.name}</div>
@@ -83,7 +83,8 @@ function renderShopGrid(){
 function openModal(id){
   currentModalProduct = findProduct(id);
   modalQty = 1;
-  document.getElementById('modalArt').innerHTML = icons[currentModalProduct.icon];
+  document.getElementById('modalArt').className = 'modal-art ' + productArtClass(currentModalProduct);
+  document.getElementById('modalArt').innerHTML = productArt(currentModalProduct);
   document.getElementById('modalCat').textContent = currentModalProduct.cat;
   document.getElementById('modalName').textContent = currentModalProduct.name;
   document.getElementById('modalPrice').textContent = money(currentModalProduct.price);
@@ -133,7 +134,7 @@ function renderCartPage(){
   const rows = cart.map(item=>{
     const p = findProduct(item.id);
     return `<div class="cart-row" data-id="${p.id}">
-      <div class="thumb">${icons[p.icon]}</div>
+      <div class="thumb ${productArtClass(p)}">${productArt(p)}</div>
       <div>
         <div class="name">${p.name}</div>
         <div class="cat">${p.cat} · ${money(p.price)} each</div>
@@ -550,8 +551,10 @@ document.addEventListener('keydown', e=>{
 });
 
 /* ---------------- INIT ---------------- */
-renderHomeFeatured();
 (async () => {
+  await loadProducts();
+  renderHomeFeatured();
+
   const initialPage = location.hash.slice(1) || 'home';
   if(authRequiredPages.includes(initialPage)){
     // Wait for Supabase to restore any existing session first, so a signed-in
